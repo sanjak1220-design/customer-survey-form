@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>고객 만족도 설문조사</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #f4f6f0;
+      color: #2d2d2d;
+      padding: 40px 16px 80px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #4a7c59, #6aab7e);
+      border-radius: 16px;
+      padding: 40px 36px;
+      color: white;
+      margin-bottom: 24px;
+    }
+    .header .brand { font-size: 13px; letter-spacing: 2px; opacity: 0.85; margin-bottom: 10px; }
+    .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 12px; line-height: 1.4; }
+    .header p { font-size: 14px; opacity: 0.9; line-height: 1.7; }
+
+    /* Section card */
+    .section {
+      background: white;
+      border-radius: 14px;
+      padding: 32px 36px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #4a7c59;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e8f0e9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .icon { font-size: 20px; }
+
+    /* Question */
+    .question { margin-bottom: 28px; }
+    .question:last-child { margin-bottom: 0; }
+    .question label.q {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    .required { color: #e05454; margin-left: 3px; }
+
+    /* Star rating */
+    .star-group { display: flex; flex-direction: row-reverse; gap: 6px; width: fit-content; }
+    .star-group input { display: none; }
+    .star-group label {
+      font-size: 32px;
+      color: #ddd;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .star-group input:checked ~ label,
+    .star-group label:hover,
+    .star-group label:hover ~ label {
+      color: #f5b800;
+    }
+    .star-hint { font-size: 12px; color: #999; margin-top: 6px; }
+
+    /* Radio / Checkbox */
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .options.inline { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+    .opt {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 16px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .opt:hover { border-color: #6aab7e; background: #f7fbf8; }
+    .opt input[type="radio"]:checked + span,
+    .opt input[type="checkbox"]:checked + span { color: #4a7c59; font-weight: 600; }
+    .opt input[type="radio"]:checked ~ *,
+    .opt:has(input:checked) { border-color: #4a7c59; background: #f0f8f2; }
+    .opt input { accent-color: #4a7c59; width: 16px; height: 16px; }
+
+    /* Scale 1–5 */
+    .scale-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .scale-group .scale-label { font-size: 12px; color: #888; }
+    .scale-btn {
+      width: 44px; height: 44px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 50%;
+      background: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #555;
+    }
+    .scale-btn:hover { border-color: #6aab7e; color: #4a7c59; }
+    .scale-btn.active { background: #4a7c59; border-color: #4a7c59; color: white; }
+
+    /* Textarea / Input */
+    textarea, input[type="text"], input[type="email"], input[type="tel"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #2d2d2d;
+      resize: vertical;
+      transition: border-color 0.15s;
+      background: #fafafa;
+    }
+    textarea:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus {
+      outline: none;
+      border-color: #4a7c59;
+      background: white;
+    }
+    textarea { min-height: 100px; }
+
+    /* Info row */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 500px) { .info-grid { grid-template-columns: 1fr; } }
+
+    .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #555; }
+
+    /* NPS bar */
+    .nps-group { display: flex; gap: 4px; flex-wrap: wrap; }
+    .nps-btn {
+      flex: 1; min-width: 36px; height: 42px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 6px;
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #555;
+    }
+    .nps-btn:hover { border-color: #6aab7e; }
+    .nps-btn.active { background: #4a7c59; border-color: #4a7c59; color: white; }
+    .nps-labels { display: flex; justify-content: space-between; font-size: 11px; color: #999; margin-top: 6px; }
+
+    /* Submit */
+    .submit-wrap { text-align: center; margin-top: 32px; }
+    .submit-btn {
+      background: linear-gradient(135deg, #4a7c59, #6aab7e);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 16px 56px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(74,124,89,0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.5px;
+    }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74,124,89,0.45); }
+
+    .privacy-note {
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.7;
+    }
+
+    /* Thank you modal */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 20px;
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 380px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal .emoji { font-size: 52px; margin-bottom: 16px; }
+    .modal h2 { font-size: 22px; font-weight: 700; color: #4a7c59; margin-bottom: 10px; }
+    .modal p { font-size: 14px; color: #666; line-height: 1.7; }
+    .modal-close {
+      margin-top: 24px;
+      background: #4a7c59;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 36px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: #e8f0e9;
+      border-radius: 4px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4a7c59, #6aab7e);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">🌿 고객의 소리</div>
+    <h1>고객 만족도 설문조사</h1>
+    <p>소중한 의견 하나하나가 더 나은 서비스를 만드는 힘이 됩니다.<br>
+    솔직한 답변 부탁드립니다. 소요 시간은 약 <strong>3~5분</strong>입니다.</p>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <form id="surveyForm" novalidate>
+
+    <!-- 섹션 0: 기본 정보 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">👤</span> 기본 정보</div>
+
+      <div class="info-grid">
+        <div class="field question">
+          <label>성함 (선택)</label>
+          <input type="text" name="name" placeholder="홍길동" />
+        </div>
+        <div class="field question">
+          <label>연락처 또는 이메일 (선택)</label>
+          <input type="text" name="contact" placeholder="연락 가능한 정보" />
+        </div>
+      </div>
+
+      <div class="question" style="margin-top:20px;">
+        <label class="q">어떤 서비스를 이용하셨나요? <span class="required">*</span></label>
+        <div class="options">
+          <label class="opt"><input type="checkbox" name="service_type" value="energybar" /><span>🍫 수제 에너지바 (구매)</span></label>
+          <label class="opt"><input type="checkbox" name="service_type" value="education" /><span>📚 평생교육 서비스 (강좌/클래스)</span></label>
+          <label class="opt"><input type="checkbox" name="service_type" value="both" /><span>✅ 두 가지 모두</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q">이용 횟수는 어떻게 되시나요? <span class="required">*</span></label>
+        <div class="options inline">
+          <label class="opt"><input type="radio" name="frequency" value="first" /><span>처음 이용</span></label>
+          <label class="opt"><input type="radio" name="frequency" value="2to3" /><span>2~3회</span></label>
+          <label class="opt"><input type="radio" name="frequency" value="4to10" /><span>4~10회</span></label>
+          <label class="opt"><input type="radio" name="frequency" value="regular" /><span>정기 이용 중</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 섹션 1: 수제 에너지바 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">🍫</span> 수제 에너지바 만족도</div>
+
+      <div class="question">
+        <label class="q">제품 전반적인 만족도는 어떠셨나요? <span class="required">*</span></label>
+        <div class="star-group" data-name="bar_overall">
+          <input type="radio" name="bar_overall" id="b5" value="5"/><label for="b5">★</label>
+          <input type="radio" name="bar_overall" id="b4" value="4"/><label for="b4">★</label>
+          <input type="radio" name="bar_overall" id="b3" value="3"/><label for="b3">★</label>
+          <input type="radio" name="bar_overall" id="b2" value="2"/><label for="b2">★</label>
+          <input type="radio" name="bar_overall" id="b1" value="1"/><label for="b1">★</label>
+        </div>
+        <div class="star-hint">★ 매우 불만족 &nbsp;|&nbsp; ★★★★★ 매우 만족</div>
+      </div>
+
+      <div class="question">
+        <label class="q">항목별 만족도를 평가해 주세요. <span class="required">*</span></label>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="background:#f4f6f0;">
+              <th style="padding:10px 12px; text-align:left; border-radius:6px 0 0 6px;">항목</th>
+              <th style="padding:10px 6px; text-align:center;">매우 불만</th>
+              <th style="padding:10px 6px; text-align:center;">불만</th>
+              <th style="padding:10px 6px; text-align:center;">보통</th>
+              <th style="padding:10px 6px; text-align:center;">만족</th>
+              <th style="padding:10px 6px; text-align:center; border-radius:0 6px 6px 0;">매우 만족</th>
+            </tr>
+          </thead>
+          <tbody id="barTable">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="question">
+        <label class="q">에너지바 구매 시 가장 중요하게 생각하는 요소는? (최대 2개)</label>
+        <div class="options">
+          <label class="opt"><input type="checkbox" name="bar_priority" value="taste" /><span>맛과 식감</span></label>
+          <label class="opt"><input type="checkbox" name="bar_priority" value="ingredient" /><span>원재료 품질 / 성분</span></label>
+          <label class="opt"><input type="checkbox" name="bar_priority" value="nutrition" /><span>영양 성분 (단백질, 칼로리 등)</span></label>
+          <label class="opt"><input type="checkbox" name="bar_priority" value="price" /><span>가격 대비 용량</span></label>
+          <label class="opt"><input type="checkbox" name="bar_priority" value="packaging" /><span>포장 및 보관 편의성</span></label>
+          <label class="opt"><input type="checkbox" name="bar_priority" value="delivery" /><span>배송 속도 및 상태</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q">현재 가격대에 대해 어떻게 생각하시나요?</label>
+        <div class="options inline">
+          <label class="opt"><input type="radio" name="bar_price" value="cheap" /><span>매우 저렴함</span></label>
+          <label class="opt"><input type="radio" name="bar_price" value="reasonable" /><span>적당함</span></label>
+          <label class="opt"><input type="radio" name="bar_price" value="slightly_expensive" /><span>약간 비쌈</span></label>
+          <label class="opt"><input type="radio" name="bar_price" value="expensive" /><span>많이 비쌈</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q">앞으로 추가되었으면 하는 맛이나 성분이 있으신가요?</label>
+        <textarea name="bar_request" placeholder="예: 프로틴 함량을 높인 바, 견과류 무첨가 버전, 녹차맛 등..."></textarea>
+      </div>
+    </div>
+
+    <!-- 섹션 2: 평생교육 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">📚</span> 평생교육 서비스 만족도</div>
+
+      <div class="question">
+        <label class="q">수강하신 강좌의 전반적인 만족도는? <span class="required">*</span></label>
+        <div class="star-group">
+          <input type="radio" name="edu_overall" id="e5" value="5"/><label for="e5">★</label>
+          <input type="radio" name="edu_overall" id="e4" value="4"/><label for="e4">★</label>
+          <input type="radio" name="edu_overall" id="e3" value="3"/><label for="e3">★</label>
+          <input type="radio" name="edu_overall" id="e2" value="2"/><label for="e2">★</label>
+          <input type="radio" name="edu_overall" id="e1" value="1"/><label for="e1">★</label>
+        </div>
+        <div class="star-hint">★ 매우 불만족 &nbsp;|&nbsp; ★★★★★ 매우 만족</div>
+      </div>
+
+      <div class="question">
+        <label class="q">항목별 만족도를 평가해 주세요. <span class="required">*</span></label>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+          <thead>
+            <tr style="background:#f4f6f0;">
+              <th style="padding:10px 12px; text-align:left; border-radius:6px 0 0 6px;">항목</th>
+              <th style="padding:10px 6px; text-align:center;">매우 불만</th>
+              <th style="padding:10px 6px; text-align:center;">불만</th>
+              <th style="padding:10px 6px; text-align:center;">보통</th>
+              <th style="padding:10px 6px; text-align:center;">만족</th>
+              <th style="padding:10px 6px; text-align:center; border-radius:0 6px 6px 0;">매우 만족</th>
+            </tr>
+          </thead>
+          <tbody id="eduTable"></tbody>
+        </table>
+      </div>
+
+      <div class="question">
+        <label class="q">강사/운영진의 소통 및 피드백은 어떠셨나요?</label>
+        <div class="options inline">
+          <label class="opt"><input type="radio" name="edu_communication" value="very_good" /><span>매우 적극적</span></label>
+          <label class="opt"><input type="radio" name="edu_communication" value="good" /><span>원활함</span></label>
+          <label class="opt"><input type="radio" name="edu_communication" value="neutral" /><span>보통</span></label>
+          <label class="opt"><input type="radio" name="edu_communication" value="poor" /><span>아쉬움</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q">수업 방식에 대해 어떻게 생각하시나요?</label>
+        <div class="options">
+          <label class="opt"><input type="radio" name="edu_format" value="offline_best" /><span>오프라인 수업이 더 좋음</span></label>
+          <label class="opt"><input type="radio" name="edu_format" value="online_best" /><span>온라인 수업이 더 좋음</span></label>
+          <label class="opt"><input type="radio" name="edu_format" value="hybrid" /><span>온·오프라인 병행이 이상적</span></label>
+          <label class="opt"><input type="radio" name="edu_format" value="dont_mind" /><span>방식에 상관없음</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q">앞으로 개설되었으면 하는 강좌나 프로그램이 있다면?</label>
+        <textarea name="edu_request" placeholder="예: 건강한 식품 만들기 심화반, 주말 집중 코스, 온라인 자격증 과정 등..."></textarea>
+      </div>
+    </div>
+
+    <!-- 섹션 3: 고객 경험 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">💬</span> 전반적인 고객 경험</div>
+
+      <div class="question">
+        <label class="q">처음 저희 서비스를 알게 된 경로는 무엇인가요?</label>
+        <div class="options">
+          <label class="opt"><input type="checkbox" name="channel" value="sns" /><span>SNS (인스타그램, 유튜브 등)</span></label>
+          <label class="opt"><input type="checkbox" name="channel" value="blog" /><span>블로그 / 카페</span></label>
+          <label class="opt"><input type="checkbox" name="channel" value="word_of_mouth" /><span>지인 추천</span></label>
+          <label class="opt"><input type="checkbox" name="channel" value="search" /><span>포털 검색 (네이버, 구글)</span></label>
+          <label class="opt"><input type="checkbox" name="channel" value="offline" /><span>오프라인 홍보물 / 현수막</span></label>
+          <label class="opt"><input type="checkbox" name="channel" value="other_channel" /><span>기타</span></label>
+        </div>
+      </div>
+
+      <div class="question">
+        <label class="q">고객 문의 및 응대는 얼마나 만족스러우셨나요?</label>
+        <div class="star-group">
+          <input type="radio" name="cs_rating" id="cs5" value="5"/><label for="cs5">★</label>
+          <input type="radio" name="cs_rating" id="cs4" value="4"/><label for="cs4">★</label>
+          <input type="radio" name="cs_rating" id="cs3" value="3"/><label for="cs3">★</label>
+          <input type="radio" name="cs_rating" id="cs2" value="2"/><label for="cs2">★</label>
+          <input type="radio" name="cs_rating" id="cs1" value="1"/><label for="cs1">★</label>
+        </div>
+        <div class="star-hint">★ 매우 불만족 &nbsp;|&nbsp; ★★★★★ 매우 만족</div>
+      </div>
+
+      <div class="question">
+        <label class="q">서비스 이용 중 불편하셨던 점이 있다면 알려주세요.</label>
+        <textarea name="pain_point" placeholder="개선이 필요한 부분, 아쉬웠던 점을 솔직하게 적어주세요."></textarea>
+      </div>
+    </div>
+
+    <!-- 섹션 4: NPS -->
+    <div class="section">
+      <div class="section-title"><span class="icon">💚</span> 추천 의향</div>
+
+      <div class="question">
+        <label class="q">주변 지인에게 저희 브랜드를 추천할 의향이 얼마나 되시나요? <span class="required">*</span></label>
+        <div class="nps-group" id="npsGroup"></div>
+        <div class="nps-labels">
+          <span>전혀 추천하지 않겠다</span>
+          <span>반드시 추천하겠다</span>
+        </div>
+        <input type="hidden" name="nps" id="npsValue" />
+      </div>
+
+      <div class="question">
+        <label class="q">그렇게 답하신 이유를 간략히 적어주세요.</label>
+        <textarea name="nps_reason" placeholder="좋았던 점, 아쉬운 점 모두 환영합니다."></textarea>
+      </div>
+
+      <div class="question">
+        <label class="q">재구매 / 재수강 의향이 있으신가요? <span class="required">*</span></label>
+        <div class="options inline">
+          <label class="opt"><input type="radio" name="repurchase" value="definitely" /><span>반드시 할 것</span></label>
+          <label class="opt"><input type="radio" name="repurchase" value="likely" /><span>아마 할 것</span></label>
+          <label class="opt"><input type="radio" name="repurchase" value="undecided" /><span>미정</span></label>
+          <label class="opt"><input type="radio" name="repurchase" value="unlikely" /><span>하지 않을 것</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 섹션 5: 자유 의견 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">✍️</span> 자유 의견</div>
+      <div class="question">
+        <label class="q">저희에게 전하고 싶은 말씀이 있다면 무엇이든 적어주세요.</label>
+        <textarea name="free_comment" style="min-height:130px;" placeholder="칭찬, 제안, 아이디어 모두 소중하게 검토하겠습니다."></textarea>
+      </div>
+    </div>
+
+    <div class="submit-wrap">
+      <button type="submit" class="submit-btn">설문 제출하기</button>
+      <p class="privacy-note">수집된 정보는 서비스 개선 목적으로만 활용되며,<br>개인정보는 안전하게 보호됩니다.</p>
+    </div>
+
+  </form>
+</div>
+
+<!-- Thank you modal -->
+<div class="modal-overlay" id="thankModal">
+  <div class="modal">
+    <div class="emoji">🙏</div>
+    <h2>소중한 의견 감사합니다!</h2>
+    <p>보내주신 답변은 더 나은 제품과 교육 서비스를 만드는 데 적극 반영하겠습니다.<br><br>
+    앞으로도 함께해 주세요 💚</p>
+    <button class="modal-close" onclick="document.getElementById('thankModal').classList.remove('show')">확인</button>
+  </div>
+</div>
+
+<script>
+  // ── 에너지바 항목 테이블 ──
+  const barItems = [
+    { name: 'bar_taste', label: '맛과 식감' },
+    { name: 'bar_ingredient', label: '재료 품질 / 신선도' },
+    { name: 'bar_nutrition', label: '영양 성분 충족도' },
+    { name: 'bar_packaging', label: '포장 디자인 및 품질' },
+    { name: 'bar_delivery', label: '배송 속도 및 상태' },
+    { name: 'bar_variety', label: '제품 종류 다양성' },
+  ];
+
+  const eduItems = [
+    { name: 'edu_content', label: '강좌 내용의 질' },
+    { name: 'edu_instructor', label: '강사 역량 및 전달력' },
+    { name: 'edu_schedule', label: '강좌 일정 및 시간대' },
+    { name: 'edu_material', label: '교재 / 자료 충실도' },
+    { name: 'edu_venue', label: '수업 환경 (시설 / 온라인 플랫폼)' },
+    { name: 'edu_price', label: '수강료 대비 만족도' },
+  ];
+
+  function buildTable(tbodyId, items) {
+    const tbody = document.getElementById(tbodyId);
+    items.forEach((item, idx) => {
+      const tr = document.createElement('tr');
+      tr.style.cssText = idx % 2 === 1 ? 'background:#fafafa;' : '';
+      let tds = `<td style="padding:10px 12px; font-weight:500;">${item.label}</td>`;
+      [1,2,3,4,5].forEach(v => {
+        tds += `<td style="padding:10px 6px; text-align:center;">
+          <input type="radio" name="${item.name}" value="${v}" style="accent-color:#4a7c59; width:16px; height:16px;" />
+        </td>`;
+      });
+      tr.innerHTML = tds;
+      tbody.appendChild(tr);
+    });
+  }
+  buildTable('barTable', barItems);
+  buildTable('eduTable', eduItems);
+
+  // ── NPS ──
+  const npsGroup = document.getElementById('npsGroup');
+  for (let i = 0; i <= 10; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'nps-btn';
+    btn.textContent = i;
+    btn.dataset.val = i;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nps-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('npsValue').value = i;
+    });
+    npsGroup.appendChild(btn);
+  }
+
+  // ── Progress bar ──
+  function updateProgress() {
+    const required = document.querySelectorAll('[required], input[name="service_type"], input[name="frequency"], input[name="bar_overall"], input[name="edu_overall"], input[name="nps"], input[name="repurchase"]');
+    let filled = 0;
+    const names = new Set();
+    document.querySelectorAll('input[name="service_type"]:checked, input[name="frequency"]:checked, input[name="bar_overall"]:checked, input[name="edu_overall"]:checked, input[name="repurchase"]:checked').forEach(el => names.add(el.name));
+    if (document.getElementById('npsValue').value) names.add('nps');
+    const total = 6;
+    document.getElementById('progressFill').style.width = Math.min(100, Math.round((names.size / total) * 100)) + '%';
+  }
+  document.getElementById('surveyForm').addEventListener('change', updateProgress);
+  document.querySelectorAll('.nps-btn').forEach(b => b.addEventListener('click', updateProgress));
+
+  // ── Google Apps Script 웹앱 URL ──
+  // 배포 후 받은 URL을 아래에 붙여넣으세요
+  const SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+  // ── Submit ──
+  document.getElementById('surveyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // 필수 체크
+    const serviceChecked = document.querySelectorAll('input[name="service_type"]:checked').length > 0;
+    const freqChecked = document.querySelector('input[name="frequency"]:checked');
+    const repurchaseChecked = document.querySelector('input[name="repurchase"]:checked');
+
+    if (!serviceChecked || !freqChecked || !repurchaseChecked) {
+      alert('필수 항목(*)을 모두 작성해 주세요.');
+      return;
+    }
+
+    // 데이터 수집
+    const formData = new FormData(this);
+    const data = {};
+    for (const [k, v] of formData.entries()) {
+      if (data[k]) {
+        data[k] = [].concat(data[k], v);
+      } else {
+        data[k] = v;
+      }
+    }
+
+    // 제출 버튼 로딩 상태
+    const btn = document.querySelector('.submit-btn');
+    btn.textContent = '제출 중...';
+    btn.disabled = true;
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('thankModal').classList.add('show');
+      document.getElementById('surveyForm').reset();
+      document.querySelectorAll('.nps-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('npsValue').value = '';
+
+    } catch (err) {
+      alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      console.error(err);
+    } finally {
+      btn.textContent = '설문 제출하기';
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
